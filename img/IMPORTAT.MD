@@ -1,0 +1,3 @@
+EL OS DE MARCUS DEBERIA VERSE EXACTAMENTE COMO EN LA IIMAGEN
+
+Img en: C:\Users\User\Desktop\Marcus OS\img\MARCUS.png

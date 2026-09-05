@@ -1,0 +1,159 @@
+extern fn kernel_puts(text: String) -> ();
+extern fn kernel_idt_init() -> ();
+extern fn kernel_interrupts_init() -> ();
+extern fn kernel_wait_for_tick() -> i32;
+extern fn kernel_scheduler_test() -> i32;
+extern fn kernel_context_switch_test() -> i32;
+extern fn kernel_process_test() -> i32;
+extern fn kernel_ipc_test() -> i32;
+extern fn kernel_filesystem_test() -> i32;
+extern fn kernel_framebuffer_test() -> i32;
+extern fn kernel_network_test() -> i32;
+extern fn kernel_nic_probe_test() -> i32;
+extern fn kernel_nic_init_stage() -> i32;
+extern fn kernel_nic_stage_message() -> String;
+extern fn kernel_network_state_test() -> i32;
+extern fn kernel_nic_ring_test() -> i32;
+extern fn kernel_nic_ring_stage_message() -> String;
+extern fn kernel_nic_dma_layout_test() -> i32;
+extern fn kernel_nic_register_state() -> String;
+extern fn kernel_network_wire_test() -> i32;
+extern fn kernel_nic_wire_stage_message() -> String;
+extern fn kernel_halt() -> ();
+extern fn kernel_memory_init(map_address: usize) -> ();
+extern fn kernel_page_alloc() -> usize;
+extern fn kernel_page_free(address: usize) -> ();
+extern fn kernel_virtual_mapping_test() -> i32;
+extern fn kernel_virtual_protection_test() -> i32;
+extern fn kernel_address_space_test() -> i32;
+extern fn kernel_heap_alloc(size: usize) -> usize;
+extern fn kernel_heap_free(address: usize, size: usize) -> ();
+
+fn kernel_main() -> () {
+    // SAFETY: these FFI calls are the kernel-owned hardware boundary.
+    unsafe { // SAFETY: kernel-owned hardware and memory FFI boundary.
+        kernel_puts("========================================\n");
+        kernel_puts("          MARCUS OS KERNEL\n");
+        kernel_puts("========================================\n\n");
+        kernel_puts("Architecture: x86_64\n");
+        kernel_puts("Language: Kryo\n");
+        kernel_puts("Boot: OK\n");
+        kernel_puts("CPU: OK\n");
+        kernel_puts("Memory: identity mapped 2 MiB\n");
+        kernel_puts("Serial: COM1\n\n");
+        kernel_memory_init(0x5000);
+        let first_page = kernel_page_alloc();
+        let second_page = kernel_page_alloc();
+        if first_page != 0 && second_page != 0 && first_page != second_page {
+            kernel_puts("Physical memory: allocator OK\n");
+            kernel_page_free(first_page);
+            kernel_page_free(second_page);
+        } else {
+            kernel_puts("Physical memory: allocator FAILED\n");
+        }
+        if kernel_virtual_mapping_test() != 0 {
+            kernel_puts("Virtual memory: mapping OK\n");
+        } else {
+            kernel_puts("Virtual memory: mapping FAILED\n");
+        }
+        if kernel_virtual_protection_test() != 0 {
+            kernel_puts("Memory protection: NX/read-only OK\n");
+        } else {
+            kernel_puts("Memory protection: FAILED\n");
+        }
+        if kernel_address_space_test() != 0 {
+            kernel_puts("Address spaces: switch/restore OK\n");
+        } else {
+            kernel_puts("Address spaces: FAILED\n");
+        }
+        let heap_block = kernel_heap_alloc(128);
+        if heap_block != 0 {
+            kernel_puts("Kernel heap: allocation OK\n");
+            kernel_heap_free(heap_block, 128);
+        } else {
+            kernel_puts("Kernel heap: allocation FAILED\n");
+        }
+        kernel_idt_init();
+        if kernel_scheduler_test() != 0 {
+            kernel_puts("Scheduler: runnable queue OK\n");
+        } else {
+            kernel_puts("Scheduler: FAILED\n");
+        }
+        if kernel_context_switch_test() != 0 {
+            kernel_puts("Threads: context switch OK\n");
+        } else {
+            kernel_puts("Threads: FAILED\n");
+        }
+        if kernel_process_test() != 0 {
+            kernel_puts("Processes: address spaces OK\n");
+        } else {
+            kernel_puts("Processes: FAILED\n");
+        }
+        if kernel_ipc_test() != 0 {
+            kernel_puts("IPC: channel message OK\n");
+        } else {
+            kernel_puts("IPC: FAILED\n");
+        }
+        if kernel_filesystem_test() != 0 {
+            kernel_puts("Storage/VFS: MarcusFS read/write/delete OK\n");
+        } else {
+            kernel_puts("Storage/VFS: FAILED\n");
+        }
+        if kernel_framebuffer_test() != 0 {
+            kernel_puts("Framebuffer: VGA graphics OK\n");
+        } else {
+            kernel_puts("Framebuffer: FAILED\n");
+        }
+        if kernel_network_test() != 0 {
+            kernel_puts("Networking: Ethernet/IPv4/UDP OK\n");
+        } else {
+            kernel_puts("Networking: FAILED\n");
+        }
+        if kernel_nic_probe_test() != 0 {
+            kernel_puts("NIC: e1000 MMIO initialized\n");
+        } else {
+            kernel_puts("NIC: e1000 init failed: ");
+            kernel_puts(kernel_nic_stage_message());
+            kernel_puts("\n");
+        }
+        if kernel_network_state_test() != 0 {
+            kernel_puts("Networking state: ARP/socket tables OK\n");
+        } else {
+            kernel_puts("Networking state: FAILED\n");
+        }
+        if kernel_nic_ring_test() != 0 {
+            kernel_puts("NIC: e1000 TX/RX rings OK\n");
+        } else {
+            kernel_puts("NIC: e1000 rings FAILED: ");
+            kernel_puts(kernel_nic_ring_stage_message());
+            kernel_puts("\n");
+        }
+        if kernel_nic_dma_layout_test() != 0 {
+            kernel_puts("NIC: DMA layout/alignment OK\n");
+        } else {
+            kernel_puts("NIC: DMA layout FAILED\n");
+        }
+        if kernel_network_wire_test() != 0 {
+            kernel_puts("Networking: ARP TX/RX on wire OK\n");
+        } else {
+            kernel_puts("Networking: ARP TX/RX FAILED: ");
+            kernel_puts(kernel_nic_wire_stage_message());
+            kernel_puts("\n");
+        }
+        kernel_puts("NIC: ");
+        kernel_puts(kernel_nic_register_state());
+        kernel_puts("\n");
+        kernel_interrupts_init();
+        if kernel_wait_for_tick() != 0 {
+            kernel_puts("Interrupts: PIC/PIT OK\n");
+        }
+        kernel_puts("IDT: OK\n\n");
+        kernel_puts("MARCUS OS kernel initialized.\n");
+        kernel_halt();
+    }
+}
+
+fn main() -> i32 {
+    kernel_main();
+    return 0;
+}

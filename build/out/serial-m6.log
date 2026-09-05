@@ -1,0 +1,33 @@
+========================================
+          MARCUS OS KERNEL
+========================================
+
+Architecture: x86_64
+Language: Kryo
+Boot: OK
+CPU: OK
+Memory: identity mapped 2 MiB
+Serial: COM1
+
+Physical memory: allocator OK
+Virtual memory: mapping OK
+Memory protection: NX/read-only OK
+Address spaces: switch/restore OK
+Kernel heap: allocation OK
+Scheduler: runnable queue OK
+Threads: context switch OK
+Processes: address spaces OK
+IPC: channel message OK
+Storage/VFS: MarcusFS read/write/delete OK
+Framebuffer: VGA graphics OK
+Networking: Ethernet/IPv4/UDP OK
+NIC: e1000 MMIO initialized
+Networking state: ARP/socket tables OK
+NIC: e1000 TX/RX rings OK
+NIC: DMA layout/alignment OK
+Networking: ARP TX/RX FAILED: ARP RX timeout
+NIC: TDH/TDT/TXDCTL/TCTL/ICR captured
+Interrupts: PIC/PIT OK
+IDT: OK
+
+MARCUS OS kernel initialized.

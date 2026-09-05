@@ -1,0 +1,26 @@
+#[repr(C)]
+struct CpuidRegs {
+    eax: u32,
+    ebx: u32,
+    ecx: u32,
+    edx: u32,
+}
+
+extern fn kryo_cpuid_raw(leaf: u32, subleaf: u32, out: usize) -> ();
+
+fn cpuid(leaf: u32, subleaf: u32, out: usize) {
+    unsafe {
+        kryo_cpuid_raw(leaf, subleaf, out);
+    }
+}
+
+fn main() -> i32 {
+    let mut regs: CpuidRegs = CpuidRegs { eax: 0, ebx: 0, ecx: 0, edx: 0 };
+    let addr: usize = ((&mut regs) as *mut CpuidRegs) as usize;
+    cpuid(0, 0, addr);
+    println(regs.eax);
+    println(regs.ebx);
+    println(regs.ecx);
+    println(regs.edx);
+    return 0;
+}
